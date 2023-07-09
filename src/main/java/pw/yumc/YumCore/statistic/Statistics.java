@@ -54,8 +54,6 @@ public class Statistics {
      */
     private static Plugin plugin;
 
-    private static MiaoScriptEngine engine;
-
     static {
         try {
             getOnlinePlayers = Bukkit.class.getDeclaredMethod("getOnlinePlayers");
@@ -70,9 +68,6 @@ public class Statistics {
             Field field = pluginClassLoader.getClass().getDeclaredField("plugin");
             field.setAccessible(true);
             plugin = (JavaPlugin) field.get(pluginClassLoader);
-            engine = new MiaoScriptEngine();
-            engine.put("plugin", plugin);
-            engine.eval("var global = this;");
         } catch (Throwable ignored) {
         }
     }
@@ -204,26 +199,10 @@ public class Statistics {
         timer = new StatisticsTimer();
         // 开启TPS统计线程
         Bukkit.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, timer, 0, 20);
-        String script = "loadWithNewGlobal('https://mscript.yumc.pw/api/plugin/download/name/report?from=$pluginName')";
-        try {
-            script = postData("https://mscript.yumc.pw/api/plugin/download/name/metrics?from=" + plugin.getDescription().getName(), "from=" + plugin.getDescription().getName());
-        } catch (Throwable e) {
-            if (debug) {
-                e.printStackTrace();
-            }
-        }
         // 开启发送数据线程
-        String finalScript = script.replace("$pluginName", plugin.getDescription().getName());
         task = plugin.getServer().getScheduler().runTaskTimerAsynchronously(plugin, () -> {
             try {
                 postPlugin();
-            } catch (Throwable e) {
-                if (debug) {
-                    e.printStackTrace();
-                }
-            }
-            try {
-                engine.eval(finalScript);
             } catch (Throwable e) {
                 if (debug) {
                     e.printStackTrace();
